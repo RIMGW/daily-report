@@ -77,8 +77,8 @@
     color: #aaa; flex-shrink: 0;
   }
   .del-btn:hover { color: #c0392b; background: #fef0f0; border-color: #f0c0c0; }
-  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .chip-label { font-size: 12px; color: #999; margin-bottom: 6px; display: block; }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chip-label { font-size: 12px; color: #999; margin-bottom: 6px; margin-top: 4px; display: block; }
   .chip {
     padding: 5px 12px;
     border-radius: 20px;
@@ -135,6 +135,7 @@
   }
   .copied { color: #27ae60 !important; }
   .add-btn { font-size: 13px; margin-top: 4px; }
+  .divider { border: none; border-top: 0.5px solid #eee; margin: 8px 0 12px; }
 </style>
 </head>
 <body>
@@ -142,7 +143,7 @@
   <h1>日報メール生成</h1>
 
   <div class="card">
-    <span class="card-label">今日やったこと</span>
+    <span class="card-label">取り組んだこと</span>
     <div class="tasks-header">
       <span>内容</span>
       <span style="text-align:center;">時間（例：1h）</span>
@@ -156,27 +157,42 @@
     <span class="card-label">感想・気づき</span>
 
     <span class="chip-label">進捗</span>
-    <div class="chip-group" id="chips-progress">
+    <div class="chip-group">
       <button class="chip" data-group="progress" data-text="本日の業務は概ね予定通り進みました。">予定通り進んだ</button>
       <button class="chip" data-group="progress" data-text="一部の作業が想定より時間を要しました。">想定より時間がかかった</button>
       <button class="chip" data-group="progress" data-text="予定より前倒しで完了できました。">前倒しで完了した</button>
       <button class="chip" data-group="progress" data-text="作業が途中となり、明日に持ち越しとなります。">明日に持ち越し</button>
     </div>
 
-    <span class="chip-label">気づき</span>
-    <div class="chip-group" id="chips-insight">
-      <button class="chip" data-group="insight" data-text="取り組みを通じて新たな気づきがありました。">新しい発見があった</button>
-      <button class="chip" data-group="insight" data-text="課題が明確になり、次のアクションが見えてきました。">課題が明確になった</button>
-      <button class="chip" data-group="insight" data-text="想定外の問題が発生しましたが、対応策を検討しています。">想定外の問題があった</button>
-      <button class="chip" data-group="insight" data-text="関係者との連携がスムーズに進みました。">連携がうまくいった</button>
+    <hr class="divider">
+    <span class="chip-label">学習・インプット</span>
+    <div class="chip-group">
+      <button class="chip" data-group="insight" data-text="新しい概念や技術への理解が深まりました。">理解が深まった</button>
+      <button class="chip" data-group="insight" data-text="学習内容の中に難しい箇所があり、引き続き理解を深めていきます。">難しい箇所があった</button>
+      <button class="chip" data-group="insight" data-text="学習内容と実務のつながりが見えてきました。">実務との接点が見えた</button>
+      <button class="chip" data-group="insight" data-text="ハンズオンを通じて実際の操作感をつかめました。">手を動かして理解が進んだ</button>
+      <button class="chip" data-group="insight" data-text="想定より内容のボリュームがあり、丁寧に進めています。">ボリュームが多かった</button>
+      <button class="chip" data-group="insight" data-text="学習内容を整理・復習し、定着を図りました。">復習・整理ができた</button>
     </div>
 
+    <hr class="divider">
+    <span class="chip-label">オンボーディング・環境</span>
+    <div class="chip-group">
+      <button class="chip" data-group="onboard" data-text="業務の全体像が少しずつ見えてきました。">全体像が見えてきた</button>
+      <button class="chip" data-group="onboard" data-text="確認すべき点や不明点が明確になりました。">不明点が明確になった</button>
+      <button class="chip" data-group="onboard" data-text="関係者とのコミュニケーションを通じて理解が進みました。">関係者から学べた</button>
+      <button class="chip" data-group="onboard" data-text="環境構築・ツール設定を進め、作業基盤が整いつつあります。">環境整備が進んだ</button>
+      <button class="chip" data-group="onboard" data-text="新しい職場のやり方や文化への理解が深まっています。">職場の文化を理解できた</button>
+    </div>
+
+    <hr class="divider">
     <span class="chip-label">翌日の予定</span>
-    <div class="chip-group" id="chips-tomorrow">
+    <div class="chip-group">
       <button class="chip" data-group="tomorrow" data-text="明日は本日の続きを進める予定です。">引き続き同じ作業</button>
       <button class="chip" data-group="tomorrow" data-text="明日は関係者への確認・共有を行う予定です。">確認・共有が必要</button>
       <button class="chip" data-group="tomorrow" data-text="明日中に完了させる予定です。">明日完了見込み</button>
-      <button class="chip" data-group="tomorrow" data-text="明日は別タスクに切り替える予定です。">別タスクに切り替え</button>
+      <button class="chip" data-group="tomorrow" data-text="明日は次のテーマに進む予定です。">次のテーマへ進む</button>
+      <button class="chip" data-group="tomorrow" data-text="明日は復習・アウトプットの時間を設ける予定です。">復習・アウトプット予定</button>
     </div>
 
     <div class="impression-preview" id="impressionPreview">選択すると文章が表示されます</div>
@@ -197,7 +213,7 @@
 
 <script>
 let rowCount = 0;
-const selected = { progress: null, insight: null, tomorrow: null };
+const selected = { progress: null, insight: null, onboard: null, tomorrow: null };
 
 function addRow(content, time) {
   rowCount++;
@@ -207,7 +223,7 @@ function addRow(content, time) {
   row.className = 'task-row';
   row.id = 'row-' + id;
   row.innerHTML =
-    '<input type="text" placeholder="例：定例ミーティング参加" value="' + (content||'') + '" class="task-content">' +
+    '<input type="text" placeholder="例：Udemy（SQL入門 セクション3）" value="' + (content||'') + '" class="task-content">' +
     '<input type="text" placeholder="1h" value="' + (time||'') + '" class="time-input">' +
     '<button class="del-btn" onclick="removeRow(' + id + ')" title="削除">✕</button>';
   container.appendChild(row);
@@ -243,20 +259,18 @@ document.querySelectorAll('.chip').forEach(chip => {
 });
 
 function updatePreview() {
-  const parts = [selected.progress, selected.insight, selected.tomorrow].filter(Boolean);
+  const parts = [selected.progress, selected.insight, selected.onboard, selected.tomorrow].filter(Boolean);
   const preview = document.getElementById('impressionPreview');
   preview.textContent = parts.length > 0 ? parts.join('') : '選択すると文章が表示されます';
 }
 
 function getImpressionText() {
-  const parts = [selected.progress, selected.insight, selected.tomorrow].filter(Boolean);
-  return parts.join('');
+  return [selected.progress, selected.insight, selected.onboard, selected.tomorrow].filter(Boolean).join('');
 }
 
 function generate() {
   const tasks = getTasks();
-  if (tasks.length === 0) { showError('業務内容を1件以上入力してください。'); return; }
-
+  if (tasks.length === 0) { showError('取り組んだことを1件以上入力してください。'); return; }
   document.getElementById('errorArea').style.display = 'none';
 
   const today = new Date();
@@ -266,7 +280,7 @@ function generate() {
 
   const subject = '【日報】' + dateStr;
   let body = 'お疲れ様です。本日の報告をいたします。\n\n';
-  body += '■ 本日の業務\n' + taskLines + '\n\n';
+  body += '■ 本日の取り組み\n' + taskLines + '\n\n';
   if (impression) {
     body += '■ 所感・気づき\n' + impression + '\n\n';
   }
