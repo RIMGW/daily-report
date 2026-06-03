@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>日報メール生成アプリ</title>
+<title>日報メール生成</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -15,30 +15,7 @@
     padding: 2rem 1rem;
   }
   .container { max-width: 640px; margin: 0 auto; }
-  h1 {
-    font-size: 18px;
-    font-weight: 500;
-    margin-bottom: 1.5rem;
-    color: #1a1a1a;
-  }
-  .api-section {
-    background: #fff9e6;
-    border: 0.5px solid #e8d88a;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 1.5rem;
-  }
-  .api-section label {
-    font-size: 12px;
-    color: #7a6a00;
-    display: block;
-    margin-bottom: 6px;
-  }
-  .api-section input {
-    width: 100%;
-    font-family: monospace;
-    font-size: 13px;
-  }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; }
   .card {
     background: #fff;
     border: 0.5px solid #ddd;
@@ -46,18 +23,13 @@
     padding: 1.25rem;
     margin-bottom: 1rem;
   }
-  label {
+  .card-label {
     font-size: 13px;
     color: #666;
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
-  .sublabel {
-    font-size: 12px;
-    color: #aaa;
-    margin-left: 4px;
-  }
-  input[type="text"], input[type="password"], textarea {
+  input[type="text"], textarea {
     width: 100%;
     padding: 8px 12px;
     border: 0.5px solid #ccc;
@@ -69,9 +41,7 @@
     outline: none;
     transition: border-color 0.15s;
   }
-  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
-    border-color: #888;
-  }
+  input[type="text"]:focus, textarea:focus { border-color: #888; }
   textarea { resize: vertical; line-height: 1.6; }
   .tasks-header {
     display: grid;
@@ -79,10 +49,7 @@
     gap: 8px;
     margin-bottom: 4px;
   }
-  .tasks-header span {
-    font-size: 12px;
-    color: #aaa;
-  }
+  .tasks-header span { font-size: 12px; color: #aaa; }
   .task-row {
     display: grid;
     grid-template-columns: minmax(0,1fr) 90px 32px;
@@ -90,7 +57,7 @@
     align-items: center;
     margin-bottom: 8px;
   }
-  .task-row .time-input { text-align: center; }
+  .time-input { text-align: center; }
   button {
     cursor: pointer;
     border: 0.5px solid #ccc;
@@ -102,92 +69,80 @@
     padding: 6px 14px;
     transition: background 0.1s;
   }
-  button:hover { background: #f5f5f5; }
+  button:hover { background: #f0f0f0; }
   button:active { transform: scale(0.98); }
   .del-btn {
-    width: 32px;
-    height: 36px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #aaa;
-    flex-shrink: 0;
+    width: 32px; height: 36px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #aaa; flex-shrink: 0;
   }
   .del-btn:hover { color: #c0392b; background: #fef0f0; border-color: #f0c0c0; }
-  .generate-btn {
-    width: 100%;
-    padding: 11px;
-    font-size: 14px;
-    font-weight: 500;
-    background: #1a1a1a;
-    color: #fff;
-    border: none;
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip-label { font-size: 12px; color: #999; margin-bottom: 6px; display: block; }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    border: 0.5px solid #ccc;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .chip:hover { border-color: #888; color: #1a1a1a; }
+  .chip.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .impression-preview {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #f5f4f0;
     border-radius: 8px;
+    font-size: 13px;
+    color: #555;
+    min-height: 36px;
+    line-height: 1.6;
+  }
+  .generate-btn {
+    width: 100%; padding: 11px;
+    font-size: 14px; font-weight: 500;
+    background: #1a1a1a; color: #fff;
+    border: none; border-radius: 8px;
     margin-top: 0.5rem;
   }
   .generate-btn:hover { background: #333; }
-  .generate-btn:disabled { background: #999; cursor: not-allowed; transform: none; }
-  .add-btn { font-size: 13px; margin-top: 4px; }
   .result-area { display: none; margin-top: 1.5rem; }
   .result-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 8px;
   }
   .result-header span { font-size: 13px; color: #666; }
   .subject-line {
-    font-size: 13px;
-    color: #555;
-    padding: 6px 10px;
-    background: #f5f4f0;
-    border-radius: 8px;
-    border: 0.5px solid #ddd;
+    font-size: 13px; color: #555;
+    padding: 6px 10px; background: #f5f4f0;
+    border-radius: 8px; border: 0.5px solid #ddd;
     margin-bottom: 8px;
   }
   .result-text {
-    white-space: pre-wrap;
-    font-size: 14px;
-    line-height: 1.8;
-    padding: 16px;
-    background: #fff;
-    border: 0.5px solid #ddd;
-    border-radius: 8px;
-    color: #1a1a1a;
-    min-height: 160px;
-  }
-  .loading {
-    display: none;
-    margin-top: 1.5rem;
-    text-align: center;
-    color: #888;
-    font-size: 14px;
+    white-space: pre-wrap; font-size: 14px; line-height: 1.8;
+    padding: 16px; background: #fff;
+    border: 0.5px solid #ddd; border-radius: 8px;
+    color: #1a1a1a; min-height: 160px;
   }
   .error-area {
-    display: none;
-    margin-top: 1rem;
-    font-size: 13px;
-    color: #c0392b;
-    padding: 8px 12px;
-    background: #fef0f0;
-    border-radius: 8px;
+    display: none; margin-top: 1rem; font-size: 13px;
+    color: #c0392b; padding: 8px 12px;
+    background: #fef0f0; border-radius: 8px;
     border: 0.5px solid #f0c0c0;
   }
   .copied { color: #27ae60 !important; }
+  .add-btn { font-size: 13px; margin-top: 4px; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>日報メール生成</h1>
 
-  <div class="api-section">
-    <label>Gemini APIキー（AIza...）※このページ内でのみ使用します</label>
-    <input type="password" id="apiKey" placeholder="AIzaSy..." />
-  </div>
-
   <div class="card">
-    <label>今日やったこと</label>
+    <span class="card-label">今日やったこと</span>
     <div class="tasks-header">
       <span>内容</span>
       <span style="text-align:center;">時間（例：1h）</span>
@@ -198,13 +153,36 @@
   </div>
 
   <div class="card">
-    <label>感想・気づき <span class="sublabel">断片メモでOK</span></label>
-    <textarea id="impressions" rows="3" placeholder="例：JOIN難しい　会議長すぎた　Aさんに教わった"></textarea>
+    <span class="card-label">感想・気づき</span>
+
+    <span class="chip-label">進捗</span>
+    <div class="chip-group" id="chips-progress">
+      <button class="chip" data-group="progress" data-text="本日の業務は概ね予定通り進みました。">予定通り進んだ</button>
+      <button class="chip" data-group="progress" data-text="一部の作業が想定より時間を要しました。">想定より時間がかかった</button>
+      <button class="chip" data-group="progress" data-text="予定より前倒しで完了できました。">前倒しで完了した</button>
+      <button class="chip" data-group="progress" data-text="作業が途中となり、明日に持ち越しとなります。">明日に持ち越し</button>
+    </div>
+
+    <span class="chip-label">気づき</span>
+    <div class="chip-group" id="chips-insight">
+      <button class="chip" data-group="insight" data-text="取り組みを通じて新たな気づきがありました。">新しい発見があった</button>
+      <button class="chip" data-group="insight" data-text="課題が明確になり、次のアクションが見えてきました。">課題が明確になった</button>
+      <button class="chip" data-group="insight" data-text="想定外の問題が発生しましたが、対応策を検討しています。">想定外の問題があった</button>
+      <button class="chip" data-group="insight" data-text="関係者との連携がスムーズに進みました。">連携がうまくいった</button>
+    </div>
+
+    <span class="chip-label">翌日の予定</span>
+    <div class="chip-group" id="chips-tomorrow">
+      <button class="chip" data-group="tomorrow" data-text="明日は本日の続きを進める予定です。">引き続き同じ作業</button>
+      <button class="chip" data-group="tomorrow" data-text="明日は関係者への確認・共有を行う予定です。">確認・共有が必要</button>
+      <button class="chip" data-group="tomorrow" data-text="明日中に完了させる予定です。">明日完了見込み</button>
+      <button class="chip" data-group="tomorrow" data-text="明日は別タスクに切り替える予定です。">別タスクに切り替え</button>
+    </div>
+
+    <div class="impression-preview" id="impressionPreview">選択すると文章が表示されます</div>
   </div>
 
-  <button class="generate-btn" id="generateBtn" onclick="generate()">メール文面を生成する</button>
-
-  <div class="loading" id="loadingArea">生成中です...</div>
+  <button class="generate-btn" onclick="generate()">メール文面を生成する</button>
   <div class="error-area" id="errorArea"></div>
 
   <div class="result-area" id="resultArea">
@@ -219,6 +197,7 @@
 
 <script>
 let rowCount = 0;
+const selected = { progress: null, insight: null, tomorrow: null };
 
 function addRow(content, time) {
   rowCount++;
@@ -228,21 +207,20 @@ function addRow(content, time) {
   row.className = 'task-row';
   row.id = 'row-' + id;
   row.innerHTML =
-    '<input type="text" placeholder="例：Snowflake学習（SELECT/JOIN）" value="' + (content||'') + '" class="task-content">' +
+    '<input type="text" placeholder="例：定例ミーティング参加" value="' + (content||'') + '" class="task-content">' +
     '<input type="text" placeholder="1h" value="' + (time||'') + '" class="time-input">' +
     '<button class="del-btn" onclick="removeRow(' + id + ')" title="削除">✕</button>';
   container.appendChild(row);
 }
 
 function removeRow(id) {
-  const row = document.getElementById('row-' + id);
-  if (row) row.remove();
+  const el = document.getElementById('row-' + id);
+  if (el) el.remove();
 }
 
 function getTasks() {
-  const rows = document.querySelectorAll('.task-row');
   const tasks = [];
-  rows.forEach(row => {
+  document.querySelectorAll('.task-row').forEach(row => {
     const content = row.querySelector('.task-content').value.trim();
     const time = row.querySelector('.time-input').value.trim();
     if (content) tasks.push({ content, time });
@@ -250,82 +228,53 @@ function getTasks() {
   return tasks;
 }
 
-async function generate() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  const tasks = getTasks();
-  const impressions = document.getElementById('impressions').value.trim();
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const group = chip.dataset.group;
+    document.querySelectorAll('.chip[data-group="' + group + '"]').forEach(c => c.classList.remove('selected'));
+    if (selected[group] === chip.dataset.text) {
+      selected[group] = null;
+    } else {
+      chip.classList.add('selected');
+      selected[group] = chip.dataset.text;
+    }
+    updatePreview();
+  });
+});
 
-  if (!apiKey) { showError('APIキーを入力してください。'); return; }
+function updatePreview() {
+  const parts = [selected.progress, selected.insight, selected.tomorrow].filter(Boolean);
+  const preview = document.getElementById('impressionPreview');
+  preview.textContent = parts.length > 0 ? parts.join('') : '選択すると文章が表示されます';
+}
+
+function getImpressionText() {
+  const parts = [selected.progress, selected.insight, selected.tomorrow].filter(Boolean);
+  return parts.join('');
+}
+
+function generate() {
+  const tasks = getTasks();
   if (tasks.length === 0) { showError('業務内容を1件以上入力してください。'); return; }
+
+  document.getElementById('errorArea').style.display = 'none';
 
   const today = new Date();
   const dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
   const taskLines = tasks.map(t => t.time ? '・' + t.content + '（' + t.time + '）' : '・' + t.content).join('\n');
+  const impression = getImpressionText();
 
-  document.getElementById('resultArea').style.display = 'none';
-  document.getElementById('errorArea').style.display = 'none';
-  document.getElementById('loadingArea').style.display = 'block';
-  document.getElementById('generateBtn').disabled = true;
-
-  const prompt = `あなたは日報メール作成アシスタントです。
-以下の情報から、ビジネスライクな日報メールを作成してください。
-
-# 入力情報
-- 日付：${dateStr}
-- 今日やったこと（内容・時間）：
-${taskLines}
-- 感想・気づき（断片メモ）：${impressions || 'なし'}
-
-# 出力ルール
-1. 件名と本文のみ出力（説明文・前置き不要）
-2. 件名：「【日報】${dateStr}」の形式
-3. 本文構成：
-   - 書き出し：「お疲れ様です。本日の報告をいたします。」
-   - 「■ 本日の業務」：内容・時間をそのまま箇条書き（「・」）で整形。時間がある場合は末尾に（例：1h）の形で付ける
-   - 「■ 所感・気づき」：断片メモをビジネス日報らしい自然な1〜2文に変換。ネガティブ表現は穏やかに言い換える
-   - 結び：「以上、よろしくお願いいたします。」
-4. 敬語・ビジネス文体に統一
-5. 出力形式：
-件名：[件名]
-
-[本文]`;
-
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error?.message || 'APIエラー');
-    }
-
-    const data = await response.json();
-    const fullText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    const subjectMatch = fullText.match(/件名：(.+)/);
-    const bodyMatch = fullText.match(/件名：.+\n+([\s\S]+)/);
-
-    if (subjectMatch && bodyMatch) {
-      document.getElementById('subjectLine').textContent = '件名：' + subjectMatch[1].trim();
-      document.getElementById('resultText').textContent = bodyMatch[1].trim();
-    } else {
-      document.getElementById('subjectLine').textContent = '';
-      document.getElementById('resultText').textContent = fullText.trim();
-    }
-
-    document.getElementById('resultArea').style.display = 'block';
-  } catch(e) {
-    showError('エラーが発生しました：' + e.message);
-  } finally {
-    document.getElementById('loadingArea').style.display = 'none';
-    document.getElementById('generateBtn').disabled = false;
+  const subject = '【日報】' + dateStr;
+  let body = 'お疲れ様です。本日の報告をいたします。\n\n';
+  body += '■ 本日の業務\n' + taskLines + '\n\n';
+  if (impression) {
+    body += '■ 所感・気づき\n' + impression + '\n\n';
   }
+  body += '以上、よろしくお願いいたします。';
+
+  document.getElementById('subjectLine').textContent = '件名：' + subject;
+  document.getElementById('resultText').textContent = body;
+  document.getElementById('resultArea').style.display = 'block';
 }
 
 function copyText() {
@@ -335,10 +284,7 @@ function copyText() {
     const btn = document.getElementById('copyBtn');
     btn.textContent = 'コピーしました';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'コピー';
-      btn.classList.remove('copied');
-    }, 2000);
+    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
