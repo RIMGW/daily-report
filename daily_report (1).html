@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日報メール生成アプリ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #f5f4f0;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+  .container { max-width: 640px; margin: 0 auto; }
+  h1 {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    color: #1a1a1a;
+  }
+  .api-section {
+    background: #fff9e6;
+    border: 0.5px solid #e8d88a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 1.5rem;
+  }
+  .api-section label {
+    font-size: 12px;
+    color: #7a6a00;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .api-section input {
+    width: 100%;
+    font-family: monospace;
+    font-size: 13px;
+  }
+  .card {
+    background: #fff;
+    border: 0.5px solid #ddd;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  label {
+    font-size: 13px;
+    color: #666;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .sublabel {
+    font-size: 12px;
+    color: #aaa;
+    margin-left: 4px;
+  }
+  input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: #1a1a1a;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    border-color: #888;
+  }
+  textarea { resize: vertical; line-height: 1.6; }
+  .tasks-header {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 90px 32px;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .tasks-header span {
+    font-size: 12px;
+    color: #aaa;
+  }
+  .task-row {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 90px 32px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .task-row .time-input { text-align: center; }
+  button {
+    cursor: pointer;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-family: inherit;
+    padding: 6px 14px;
+    transition: background 0.1s;
+  }
+  button:hover { background: #f5f5f5; }
+  button:active { transform: scale(0.98); }
+  .del-btn {
+    width: 32px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    flex-shrink: 0;
+  }
+  .del-btn:hover { color: #c0392b; background: #fef0f0; border-color: #f0c0c0; }
+  .generate-btn {
+    width: 100%;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+  .generate-btn:hover { background: #333; }
+  .generate-btn:disabled { background: #999; cursor: not-allowed; transform: none; }
+  .add-btn { font-size: 13px; margin-top: 4px; }
+  .result-area { display: none; margin-top: 1.5rem; }
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .result-header span { font-size: 13px; color: #666; }
+  .subject-line {
+    font-size: 13px;
+    color: #555;
+    padding: 6px 10px;
+    background: #f5f4f0;
+    border-radius: 8px;
+    border: 0.5px solid #ddd;
+    margin-bottom: 8px;
+  }
+  .result-text {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.8;
+    padding: 16px;
+    background: #fff;
+    border: 0.5px solid #ddd;
+    border-radius: 8px;
+    color: #1a1a1a;
+    min-height: 160px;
+  }
+  .loading {
+    display: none;
+    margin-top: 1.5rem;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+  }
+  .error-area {
+    display: none;
+    margin-top: 1rem;
+    font-size: 13px;
+    color: #c0392b;
+    padding: 8px 12px;
+    background: #fef0f0;
+    border-radius: 8px;
+    border: 0.5px solid #f0c0c0;
+  }
+  .copied { color: #27ae60 !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>日報メール生成</h1>
+
+  <div class="api-section">
+    <label>Anthropic APIキー（sk-ant-...）※このページ内でのみ使用します</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+  </div>
+
+  <div class="card">
+    <label>今日やったこと</label>
+    <div class="tasks-header">
+      <span>内容</span>
+      <span style="text-align:center;">時間（例：1h）</span>
+      <span></span>
+    </div>
+    <div id="task-rows"></div>
+    <button class="add-btn" onclick="addRow()">＋ 行を追加</button>
+  </div>
+
+  <div class="card">
+    <label>感想・気づき <span class="sublabel">断片メモでOK</span></label>
+    <textarea id="impressions" rows="3" placeholder="例：JOIN難しい　会議長すぎた　Aさんに教わった"></textarea>
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generate()">メール文面を生成する</button>
+
+  <div class="loading" id="loadingArea">生成中です...</div>
+  <div class="error-area" id="errorArea"></div>
+
+  <div class="result-area" id="resultArea">
+    <div class="result-header">
+      <span>生成されたメール</span>
+      <button id="copyBtn" onclick="copyText()">コピー</button>
+    </div>
+    <div class="subject-line" id="subjectLine"></div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+</div>
+
+<script>
+let rowCount = 0;
+
+function addRow(content, time) {
+  rowCount++;
+  const id = rowCount;
+  const container = document.getElementById('task-rows');
+  const row = document.createElement('div');
+  row.className = 'task-row';
+  row.id = 'row-' + id;
+  row.innerHTML =
+    '<input type="text" placeholder="例：Snowflake学習（SELECT/JOIN）" value="' + (content||'') + '" class="task-content">' +
+    '<input type="text" placeholder="1h" value="' + (time||'') + '" class="time-input">' +
+    '<button class="del-btn" onclick="removeRow(' + id + ')" title="削除">✕</button>';
+  container.appendChild(row);
+}
+
+function removeRow(id) {
+  const row = document.getElementById('row-' + id);
+  if (row) row.remove();
+}
+
+function getTasks() {
+  const rows = document.querySelectorAll('.task-row');
+  const tasks = [];
+  rows.forEach(row => {
+    const content = row.querySelector('.task-content').value.trim();
+    const time = row.querySelector('.time-input').value.trim();
+    if (content) tasks.push({ content, time });
+  });
+  return tasks;
+}
+
+async function generate() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const tasks = getTasks();
+  const impressions = document.getElementById('impressions').value.trim();
+
+  if (!apiKey) { showError('APIキーを入力してください。'); return; }
+  if (tasks.length === 0) { showError('業務内容を1件以上入力してください。'); return; }
+
+  const today = new Date();
+  const dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
+  const taskLines = tasks.map(t => t.time ? '・' + t.content + '（' + t.time + '）' : '・' + t.content).join('\n');
+
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('errorArea').style.display = 'none';
+  document.getElementById('loadingArea').style.display = 'block';
+  document.getElementById('generateBtn').disabled = true;
+
+  const prompt = `あなたは日報メール作成アシスタントです。
+以下の情報から、ビジネスライクな日報メールを作成してください。
+
+# 入力情報
+- 日付：${dateStr}
+- 今日やったこと（内容・時間）：
+${taskLines}
+- 感想・気づき（断片メモ）：${impressions || 'なし'}
+
+# 出力ルール
+1. 件名と本文のみ出力（説明文・前置き不要）
+2. 件名：「【日報】${dateStr}」の形式
+3. 本文構成：
+   - 書き出し：「お疲れ様です。本日の報告をいたします。」
+   - 「■ 本日の業務」：内容・時間をそのまま箇条書き（「・」）で整形。時間がある場合は末尾に（例：1h）の形で付ける
+   - 「■ 所感・気づき」：断片メモをビジネス日報らしい自然な1〜2文に変換。ネガティブ表現は穏やかに言い換える
+   - 結び：「以上、よろしくお願いいたします。」
+4. 敬語・ビジネス文体に統一
+5. 出力形式：
+件名：[件名]
+
+[本文]`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'APIエラー');
+    }
+
+    const data = await response.json();
+    const fullText = data.content.map(b => b.text || '').join('');
+
+    const subjectMatch = fullText.match(/件名：(.+)/);
+    const bodyMatch = fullText.match(/件名：.+\n+([\s\S]+)/);
+
+    if (subjectMatch && bodyMatch) {
+      document.getElementById('subjectLine').textContent = '件名：' + subjectMatch[1].trim();
+      document.getElementById('resultText').textContent = bodyMatch[1].trim();
+    } else {
+      document.getElementById('subjectLine').textContent = '';
+      document.getElementById('resultText').textContent = fullText.trim();
+    }
+
+    document.getElementById('resultArea').style.display = 'block';
+  } catch(e) {
+    showError('エラーが発生しました：' + e.message);
+  } finally {
+    document.getElementById('loadingArea').style.display = 'none';
+    document.getElementById('generateBtn').disabled = false;
+  }
+}
+
+function copyText() {
+  const subject = document.getElementById('subjectLine').textContent;
+  const body = document.getElementById('resultText').textContent;
+  navigator.clipboard.writeText(subject + '\n\n' + body).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'コピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorArea');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+addRow(); addRow(); addRow();
+</script>
+</body>
+</html>
