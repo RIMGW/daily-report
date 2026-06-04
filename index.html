@@ -158,7 +158,7 @@
 
     <span class="chip-label">進捗</span>
     <div class="chip-group">
-      <button class="chip" data-group="progress" data-text="本日の業務は概ね予定通り進みました。">予定通り進んだ</button>
+      <button class="chip" data-group="progress" data-text="本日の業務は概ね計画通りに進みました。">計画通りに進んだ</button>
       <button class="chip" data-group="progress" data-text="一部の作業が想定より時間を要しました。">想定より時間がかかった</button>
       <button class="chip" data-group="progress" data-text="予定より前倒しで完了できました。">前倒しで完了した</button>
       <button class="chip" data-group="progress" data-text="作業が途中となり、明日に持ち越しとなります。">明日に持ち越し</button>
@@ -188,9 +188,9 @@
     <hr class="divider">
     <span class="chip-label">翌日の予定</span>
     <div class="chip-group">
-      <button class="chip" data-group="tomorrow" data-text="明日は本日の続きを進める予定です。">引き続き同じ作業</button>
+      <button class="chip" data-group="tomorrow" data-text="明日は本日の続きの学習を進める予定です。">引き続き同じ学習</button>
       <button class="chip" data-group="tomorrow" data-text="明日は関係者への確認・共有を行う予定です。">確認・共有が必要</button>
-      <button class="chip" data-group="tomorrow" data-text="明日中に完了させる予定です。">明日完了見込み</button>
+      <button class="chip" data-group="tomorrow" data-text="明日中に学習を完了させる予定です。">明日完了見込み</button>
       <button class="chip" data-group="tomorrow" data-text="明日は次のテーマに進む予定です。">次のテーマへ進む</button>
       <button class="chip" data-group="tomorrow" data-text="明日は復習・アウトプットの時間を設ける予定です。">復習・アウトプット予定</button>
     </div>
@@ -220,7 +220,8 @@
 
 <script>
 let rowCount = 0;
-const selected = { progress: null, insight: null, onboard: null, tomorrow: null, workstyle: null };
+// 各グループの選択テキストを配列で管理（複数選択対応）
+const selected = { progress: [], insight: [], onboard: [], tomorrow: [], workstyle: [] };
 
 function addRow(content, time) {
   rowCount++;
@@ -254,25 +255,58 @@ function getTasks() {
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
     const group = chip.dataset.group;
-    document.querySelectorAll('.chip[data-group="' + group + '"]').forEach(c => c.classList.remove('selected'));
-    if (selected[group] === chip.dataset.text) {
-      selected[group] = null;
+    const text = chip.dataset.text;
+    const idx = selected[group].indexOf(text);
+    if (idx >= 0) {
+      selected[group].splice(idx, 1);
+      chip.classList.remove('selected');
     } else {
+      selected[group].push(text);
       chip.classList.add('selected');
-      selected[group] = chip.dataset.text;
     }
     updatePreview();
   });
 });
 
+function getAllSelected() {
+  return [
+    ...selected.progress,
+    ...selected.insight,
+    ...selected.onboard,
+    ...selected.tomorrow,
+    ...selected.workstyle
+  ];
+}
+
+function buildImpressionText(allSelected) {
+  if (allSelected.length === 0) return '';
+  // グループ順に段落を組み立てる
+  const groupOrder = ['progress', 'insight', 'onboard', 'tomorrow', 'workstyle'];
+  const connectors = ['また、', 'さらに、', 'そして、'];
+  const paragraphs = [];
+  groupOrder.forEach(group => {
+    const items = selected[group];
+    if (items.length === 0) return;
+    let connectorIndex = 0;
+    let para = items[0].replace(/。$/, '');
+    for (let i = 1; i < items.length; i++) {
+      const connector = connectors[connectorIndex % connectors.length];
+      connectorIndex++;
+      para += '。' + connector + items[i].replace(/。$/, '');
+    }
+    paragraphs.push(para + '。');
+  });
+  return paragraphs.join('\n');
+}
+
 function updatePreview() {
-  const parts = [selected.progress, selected.insight, selected.onboard, selected.tomorrow, selected.workstyle].filter(Boolean);
+  const parts = getAllSelected();
   const preview = document.getElementById('impressionPreview');
-  preview.textContent = parts.length > 0 ? parts.join('') : '選択すると文章が表示されます';
+  preview.textContent = parts.length > 0 ? buildImpressionText(parts) : '選択すると文章が表示されます';
 }
 
 function getImpressionText() {
-  return [selected.progress, selected.insight, selected.onboard, selected.tomorrow, selected.workstyle].filter(Boolean).join('');
+  return buildImpressionText(getAllSelected());
 }
 
 function generate() {
