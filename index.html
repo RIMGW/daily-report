@@ -195,6 +195,13 @@
       <button class="chip" data-group="tomorrow" data-text="明日は復習・アウトプットの時間を設ける予定です。">復習・アウトプット予定</button>
     </div>
 
+    <hr class="divider">
+    <span class="chip-label">明日の勤務予定</span>
+    <div class="chip-group">
+      <button class="chip" data-group="workstyle" data-text="なお、明日は新宿オフィスへ出社予定です。">新宿出社</button>
+      <button class="chip" data-group="workstyle" data-text="なお、明日は在宅勤務の予定です。">在宅勤務</button>
+    </div>
+
     <div class="impression-preview" id="impressionPreview">選択すると文章が表示されます</div>
   </div>
 
@@ -213,7 +220,7 @@
 
 <script>
 let rowCount = 0;
-const selected = { progress: null, insight: null, onboard: null, tomorrow: null };
+const selected = { progress: null, insight: null, onboard: null, tomorrow: null, workstyle: null };
 
 function addRow(content, time) {
   rowCount++;
@@ -259,13 +266,13 @@ document.querySelectorAll('.chip').forEach(chip => {
 });
 
 function updatePreview() {
-  const parts = [selected.progress, selected.insight, selected.onboard, selected.tomorrow].filter(Boolean);
+  const parts = [selected.progress, selected.insight, selected.onboard, selected.tomorrow, selected.workstyle].filter(Boolean);
   const preview = document.getElementById('impressionPreview');
   preview.textContent = parts.length > 0 ? parts.join('') : '選択すると文章が表示されます';
 }
 
 function getImpressionText() {
-  return [selected.progress, selected.insight, selected.onboard, selected.tomorrow].filter(Boolean).join('');
+  return [selected.progress, selected.insight, selected.onboard, selected.tomorrow, selected.workstyle].filter(Boolean).join('');
 }
 
 function generate() {
