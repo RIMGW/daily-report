@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>日報支援ツール</title>
+<title>daily report supporter ver3</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -140,7 +140,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>日報支援ツール</h1>
+  <h1>daily report supporter ver3</h1>
 
   <div class="card">
     <span class="card-label">取り組んだこと</span>
@@ -203,6 +203,10 @@
     </div>
 
     <div class="impression-preview" id="impressionPreview">選択すると文章が表示されます</div>
+
+    <hr class="divider">
+    <span class="chip-label">自由記述 <span style="color:#bbb;font-size:11px;">（任意）チップに追加したいことがあれば</span></span>
+    <textarea id="freeText" rows="3" placeholder="例：〇〇さんにSQLのJOINについて質問し、理解が進んだ。"></textarea>
   </div>
 
   <button class="generate-btn" onclick="generate()">メール文面を生成する</button>
@@ -211,7 +215,10 @@
   <div class="result-area" id="resultArea">
     <div class="result-header">
       <span>生成されたメール</span>
-      <button id="copyBtn" onclick="copyText()">コピー</button>
+      <div style="display:flex;gap:6px;">
+        <button onclick="generate()">もう一度生成</button>
+        <button id="copyBtn" onclick="copyText()">コピー</button>
+      </div>
     </div>
     <div class="subject-line" id="subjectLine"></div>
     <div class="result-text" id="resultText"></div>
@@ -278,21 +285,51 @@ function getAllSelected() {
   ];
 }
 
+// 文末バリエーション（句点なしの文末にマッチ）
+const endings = [
+  [/進みました$/, ['進めることができました', '進んでいます', '進みました']],
+  [/深まりました$/, ['深まってきました', '身についてきました', '深まりました']],
+  [/つかめました$/, ['つかむことができました', '感じ取ることができました', 'つかめました']],
+  [/なりました$/, ['なってきました', 'なっています', 'なりました']],
+  [/進んでいます$/, ['進みつつあります', '進んでいます', '着実に進んでいます']],
+  [/おります$/, ['おります', 'います', 'いるところです']],
+  [/います$/, ['おります', 'います', 'いるところです']],
+  [/予定です$/, ['予定にしています', '見込みです', '予定です']],
+  [/見込みです$/, ['予定にしています', '見込みです', '予定です']],
+];
+
+function applyEndingVariation(text) {
+  // 句点を除いて処理
+  const bare = text.replace(/。$/, '');
+  for (const [pattern, variants] of endings) {
+    if (pattern.test(bare)) {
+      const pick = variants[Math.floor(Math.random() * variants.length)];
+      return bare.replace(pattern, pick);
+    }
+  }
+  return bare;
+}
+
+function pickConnector(used) {
+  const all = ['また、', 'さらに、', 'そして、', '加えて、'];
+  const unused = all.filter(c => !used.includes(c));
+  const pool = unused.length > 0 ? unused : all;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function buildImpressionText(allSelected) {
   if (allSelected.length === 0) return '';
-  // グループ順に段落を組み立てる
   const groupOrder = ['progress', 'insight', 'onboard', 'tomorrow', 'workstyle'];
-  const connectors = ['また、', 'さらに、', 'そして、'];
   const paragraphs = [];
   groupOrder.forEach(group => {
     const items = selected[group];
     if (items.length === 0) return;
-    let connectorIndex = 0;
-    let para = items[0].replace(/。$/, '');
+    const usedConnectors = [];
+    let para = applyEndingVariation(items[0].replace(/。$/, ''));
     for (let i = 1; i < items.length; i++) {
-      const connector = connectors[connectorIndex % connectors.length];
-      connectorIndex++;
-      para += '。' + connector + items[i].replace(/。$/, '');
+      const connector = pickConnector(usedConnectors);
+      usedConnectors.push(connector);
+      para += '。' + connector + applyEndingVariation(items[i].replace(/。$/, ''));
     }
     paragraphs.push(para + '。');
   });
@@ -317,7 +354,10 @@ function generate() {
   const today = new Date();
   const dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
   const taskLines = tasks.map(t => t.time ? '・' + t.content + '（' + t.time + 'h）' : '・' + t.content).join('\n');
-  const impression = getImpressionText();
+  const chipText = getImpressionText();
+  const freeText = document.getElementById('freeText').value.trim();
+  const impressionParts = [chipText, freeText].filter(Boolean);
+  const impression = impressionParts.join('\n');
 
   const subject = '【日報】' + dateStr;
   let body = 'お疲れ様です。本日の報告をいたします。\n\n';
